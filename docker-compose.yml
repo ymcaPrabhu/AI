@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  doc2latex-web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./web_output:/app/web_output
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-here
+    restart: unless-stopped
+    
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - doc2latex-web
+    restart: unless-stopped

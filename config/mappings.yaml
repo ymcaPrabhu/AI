@@ -1,0 +1,11 @@
+mappings:
+  heading_map:
+    Heading 1: "section"
+    Heading 2: "subsection"
+    Heading 3: "subsubsection"
+  list_bullets:
+    symbol: "itemize"
+    numbered: "enumerate"
+  table_style: "booktabs"
+  figure_env: "figure"
+  code_env: "verbatim"

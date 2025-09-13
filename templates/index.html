@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Doc2LaTeX Online</h1>
+                <p class="lead mb-4">Convert your documents to professional LaTeX format with just a few clicks. Perfect for academic papers, government documents, and professional reports.</p>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark">DOCX</span>
+                    <span class="badge bg-light text-dark">PDF</span>
+                    <span class="badge bg-light text-dark">TXT</span>
+                    <span class="badge bg-light text-dark">→ LaTeX</span>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <i class="fas fa-file-export" style="font-size: 8rem; opacity: 0.7;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload Your Document
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+                        <div class="upload-area mb-4">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Choose a file to convert</h5>
+                            <p class="text-muted">Supported formats: TXT, DOCX, PDF (Max size: 16MB)</p>
+                            <input type="file" class="form-control" name="file" accept=".txt,.docx,.pdf,.doc" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Document Title</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       placeholder="Enter document title" value="Professional Document">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="author" class="form-label">Author</label>
+                                <input type="text" class="form-control" id="author" name="author" 
+                                       placeholder="Enter author name" value="Department Author">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="template" class="form-label">Template Style</label>
+                            <select class="form-select" id="template" name="template">
+                                <option value="pro_report" selected>Professional Report</option>
+                                <option value="academic">Academic Paper</option>
+                                <option value="government">Government Document</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>Convert to LaTeX
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <h2 class="text-center mb-5">Why Choose Doc2LaTeX?</h2>
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-rocket feature-icon"></i>
+            <h4>Fast Conversion</h4>
+            <p>Convert your documents to LaTeX in seconds with our optimized pipeline.</p>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-paint-brush feature-icon"></i>
+            <h4>Professional Styling</h4>
+            <p>Automatically apply professional formatting with government and academic templates.</p>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-download feature-icon"></i>
+            <h4>Overleaf Ready</h4>
+            <p>Get zip packages ready for direct upload to Overleaf or your LaTeX environment.</p>
+        </div>
+    </div>
+</section>
+
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h3>How it works</h3>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Upload Document</div>
+                            Upload your DOCX, PDF, or TXT file
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">AI Processing</div>
+                            Our AI converts your content to LaTeX format
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Download Results</div>
+                            Get LaTeX source, PDF, and Overleaf package
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-cogs" style="font-size: 6rem; color: #003366; opacity: 0.7;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

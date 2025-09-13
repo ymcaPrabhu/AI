@@ -1,0 +1,9 @@
+python-docx
+pdfminer.six
+pytesseract
+pillow
+pypandoc
+jinja2
+pyyaml
+latexcodec
+latexmk

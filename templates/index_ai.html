@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Enhanced Doc2LaTeX Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --indian-saffron: #FF9933;
+            --indian-navy: #138808;
+            --indian-white: #FFFFFF;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--indian-saffron), var(--indian-navy));
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 3rem 0;
+        }
+        
+        .feature-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .ai-badge {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--indian-saffron);
+            background: #fff;
+        }
+        
+        .template-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .template-card:hover {
+            border-color: var(--indian-saffron);
+            background: #fff8f0;
+        }
+        
+        .template-card.selected {
+            border-color: var(--indian-navy);
+            background: #f0f8f0;
+        }
+        
+        .btn-primary {
+            background: var(--indian-navy);
+            border-color: var(--indian-navy);
+        }
+        
+        .btn-primary:hover {
+            background: var(--indian-saffron);
+            border-color: var(--indian-saffron);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-available {
+            background: #28a745;
+        }
+        
+        .status-unavailable {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-magic me-2"></i>
+                AI-Enhanced Doc2LaTeX
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <span class="status-indicator {{ 'status-available' if ai_available else 'status-unavailable' }}"></span>
+                    AI {{ 'Available' if ai_available else 'Unavailable' }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Transform Documents with AI
+                        <span class="ai-badge">GPT-4 Powered</span>
+                    </h1>
+                    <p class="lead mb-4">
+                        Convert your documents to beautiful LaTeX with intelligent analysis, 
+                        automatic formatting, and Indian government standard templates.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-robot text-primary me-2"></i>
+                                <span>AI Document Analysis</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-flag text-primary me-2"></i>
+                                <span>Indian Govt Standards</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-pdf text-primary me-2"></i>
+                                <span>Beautiful PDF Output</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-code text-primary me-2"></i>
+                                <span>LaTeX Source</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="text-center">
+                        <i class="fas fa-file-alt" style="font-size: 8rem; color: var(--indian-saffron); opacity: 0.7;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Form -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card feature-card">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Your Document
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+
+                            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                                <!-- File Upload -->
+                                <div class="upload-area mb-4">
+                                    <input type="file" class="form-control d-none" id="file" name="file" 
+                                           accept=".txt,.doc,.docx,.pdf" required>
+                                    <label for="file" class="w-100 h-100 d-block cursor-pointer">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <h5>Click to select a document</h5>
+                                        <p class="text-muted mb-0">Supports TXT, DOC, DOCX, PDF files</p>
+                                        <div id="fileName" class="mt-2 fw-bold text-primary"></div>
+                                    </label>
+                                </div>
+
+                                <!-- AI Options -->
+                                {% if ai_available %}
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-brain me-2"></i>
+                                            AI Enhancement Options
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use_ai" name="use_ai" value="true" checked>
+                                            <label class="form-check-label" for="use_ai">
+                                                <strong>Enable AI Analysis</strong>
+                                                <small class="d-block text-muted">
+                                                    Use GPT-4 to analyze document type, enhance structure, and apply intelligent formatting
+                                                </small>
+                                            </label>
+                                        </div>
+
+                                        <div id="aiOptions">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="title" class="form-label">Custom Title (Optional)</label>
+                                                    <input type="text" class="form-control" id="title" name="title" 
+                                                           placeholder="Override AI-detected title">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="author" class="form-label">Author (Optional)</label>
+                                                    <input type="text" class="form-control" id="author" name="author" 
+                                                           placeholder="Document author">
+                                                </div>
+                                            </div>
+
+                                            <!-- Template Selection -->
+                                            <div class="mb-3">
+                                                <label class="form-label">Template Selection</label>
+                                                <div class="template-selection">
+                                                    <div class="template-card selected" data-template="auto">
+                                                        <div class="d-flex align-items-center">
+                                                            <input type="radio" name="template" value="auto" checked class="form-check-input me-3">
+                                                            <div>
+                                                                <h6 class="mb-1">🤖 Auto-Select (Recommended)</h6>
+                                                                <small class="text-muted">AI will choose the best template based on document analysis</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {% if templates %}
+                                                        {% for template_id, template_info in templates.items() %}
+                                                        <div class="template-card" data-template="{{ template_id }}">
+                                                            <div class="d-flex align-items-center">
+                                                                <input type="radio" name="template" value="{{ template_id }}" class="form-check-input me-3">
+                                                                <div>
+                                                                    <h6 class="mb-1">{{ template_info.emoji }} {{ template_info.name }}</h6>
+                                                                    <small class="text-muted">{{ template_info.description }}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>AI Features Unavailable</strong><br>
+                                    Basic conversion will be used. To enable AI features, configure OpenAI API key.
+                                </div>
+                                <input type="hidden" name="use_ai" value="false">
+                                {% endif %}
+
+                                <!-- Additional Options -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-cog me-2"></i>
+                                            Output Options
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="build_pdf" name="build_pdf" value="true" checked>
+                                            <label class="form-check-label" for="build_pdf">
+                                                <strong>Build PDF automatically</strong>
+                                                <small class="d-block text-muted">Compile LaTeX to PDF using pdflatex</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                        <i class="fas fa-magic me-2"></i>
+                                        <span id="submitText">Convert with AI</span>
+                                        <span id="loadingSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold">Powerful Features</h2>
+                    <p class="lead">Advanced document processing with cutting-edge AI technology</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                            <h5>AI Document Analysis</h5>
+                            <p class="text-muted">GPT-4 powered analysis to detect document type, structure, and optimize formatting automatically.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-landmark fa-3x text-primary mb-3"></i>
+                            <h5>Government Standards</h5>
+                            <p class="text-muted">Compliant with Indian Government formatting standards and Manual of Office Procedures.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-palette fa-3x text-primary mb-3"></i>
+                            <h5>Beautiful Templates</h5>
+                            <p class="text-muted">Professional LaTeX templates with proper typography, colors, and Indian government aesthetics.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>AI-Enhanced Doc2LaTeX</h5>
+                    <p class="text-muted">Intelligent document conversion for the modern world.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">Powered by OpenAI GPT-4 &amp; LaTeX</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File input handling
+        document.getElementById('file').addEventListener('change', function(e) {
+            const fileName = document.getElementById('fileName');
+            if (e.target.files.length > 0) {
+                fileName.textContent = e.target.files[0].name;
+                fileName.className = 'mt-2 fw-bold text-success';
+            } else {
+                fileName.textContent = '';
+            }
+        });
+
+        // Template selection
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+        });
+
+        // AI toggle
+        document.getElementById('use_ai').addEventListener('change', function() {
+            const aiOptions = document.getElementById('aiOptions');
+            const submitText = document.getElementById('submitText');
+            
+            if (this.checked) {
+                aiOptions.style.display = 'block';
+                submitText.textContent = 'Convert with AI';
+            } else {
+                aiOptions.style.display = 'none';
+                submitText.textContent = 'Convert Document';
+            }
+        });
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            submitBtn.disabled = true;
+            submitText.textContent = 'Processing...';
+            loadingSpinner.classList.remove('d-none');
+        });
+
+        // Initialize
+        {% if not ai_available %}
+        document.getElementById('aiOptions').style.display = 'none';
+        document.getElementById('submitText').textContent = 'Convert Document';
+        {% endif %}
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            {% if success %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Conversion Successful!
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-thumbs-up me-2"></i>
+                        Your document has been successfully converted to LaTeX format!
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-archive fa-3x text-primary mb-3"></i>
+                                    <h5>Overleaf Package</h5>
+                                    <p class="text-muted">Complete LaTeX project ready for Overleaf</p>
+                                    <a href="{{ download_url }}" class="btn btn-primary">
+                                        <i class="fas fa-download me-2"></i>Download ZIP
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if pdf_url %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                                    <h5>Compiled PDF</h5>
+                                    <p class="text-muted">Ready-to-use PDF document</p>
+                                    <a href="{{ pdf_url }}" class="btn btn-danger">
+                                        <i class="fas fa-download me-2"></i>Download PDF
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+                                    <h5>PDF Compilation</h5>
+                                    <p class="text-muted">PDF compilation failed locally. Upload to Overleaf for compilation.</p>
+                                    <a href="https://www.overleaf.com" target="_blank" class="btn btn-info">
+                                        <i class="fas fa-external-link-alt me-2"></i>Open Overleaf
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>What's included in your package:</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-file-code me-2"></i>main.tex</span>
+                                <span class="badge bg-primary rounded-pill">LaTeX Source</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-folder me-2"></i>figures/</span>
+                                <span class="badge bg-secondary rounded-pill">Images Directory</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-folder me-2"></i>bib/</span>
+                                <span class="badge bg-secondary rounded-pill">Bibliography</span>
+                            </li>
+                            {% if pdf_url %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-file-pdf me-2"></i>main.pdf</span>
+                                <span class="badge bg-danger rounded-pill">Compiled PDF</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Convert Another Document
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>Conversion Failed
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-times me-2"></i>
+                        Sorry, we couldn't convert your document. Please try again or contact support.
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Try Again
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-lightbulb me-2"></i>Next Steps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Using Overleaf</h6>
+                            <p class="small">Upload the ZIP file directly to Overleaf for online editing and collaboration.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Local LaTeX</h6>
+                            <p class="small">Extract the ZIP and compile with your local LaTeX distribution (TeX Live, MiKTeX).</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Customization</h6>
+                            <p class="small">Edit the LaTeX source to add figures, tables, and customize formatting.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

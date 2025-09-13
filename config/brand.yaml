@@ -1,0 +1,14 @@
+brand:
+  name: "MoF-DEA Default"
+  primary_color: "#003366"
+  secondary_color: "#B8860B"
+  accent_color: "#00897B"
+  text_color: "#111111"
+  link_color: "#0B63B6"
+  logo_path: "assets/logo_emblem.png"
+  font_main: "LiberationSerif"
+  font_sans: "LiberationSans"
+  font_mono: "Courier New"
+  page_size: "a4paper"
+  margins_mm: { top: 22, bottom: 22, left: 22, right: 22 }
+  gov_header: true

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversion Result - AI-Enhanced Doc2LaTeX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --indian-saffron: #FF9933;
+            --indian-navy: #138808;
+            --indian-white: #FFFFFF;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--indian-saffron), var(--indian-navy));
+        }
+        
+        .result-card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        
+        .success-icon {
+            color: #28a745;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .ai-badge {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .download-btn {
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: var(--indian-navy);
+            border-color: var(--indian-navy);
+        }
+        
+        .btn-primary:hover {
+            background: var(--indian-saffron);
+            border-color: var(--indian-saffron);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-magic me-2"></i>
+                AI-Enhanced Doc2LaTeX
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-plus me-1"></i>
+                    New Conversion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Success Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card result-card mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-check-circle success-icon"></i>
+                        <h1 class="h2 mb-3">
+                            Conversion Successful! 
+                            {% if ai_used %}
+                                <span class="ai-badge">AI Enhanced</span>
+                            {% endif %}
+                        </h1>
+                        <p class="lead text-muted">
+                            Your document has been successfully converted to LaTeX 
+                            {% if ai_used %}with intelligent AI analysis{% endif %}.
+                        </p>
+                        
+                        <!-- Quick Download Buttons -->
+                        <div class="row justify-content-center mt-4">
+                            <div class="col-auto">
+                                <a href="/download/{{ project_name }}/latex" class="btn btn-outline-primary download-btn me-2">
+                                    <i class="fas fa-code me-2"></i>
+                                    Download LaTeX
+                                </a>
+                            </div>
+                            {% if result.pdf_path %}
+                            <div class="col-auto">
+                                <a href="/download/{{ project_name }}/pdf" class="btn btn-primary download-btn me-2">
+                                    <i class="fas fa-file-pdf me-2"></i>
+                                    Download PDF
+                                    {% if result.pdf_size %}
+                                    <small class="d-block">{{ "%.1f"|format(result.pdf_size / 1024) }} KB</small>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="col-auto">
+                                <button onclick="compilePDF('{{ project_name }}')" class="btn btn-warning download-btn me-2" id="compilePdfBtn">
+                                    <i class="fas fa-hammer me-2"></i>
+                                    <span id="compilePdfText">Compile PDF</span>
+                                    <span id="compilePdfSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                                </button>
+                            </div>
+                            {% endif %}
+                            <div class="col-auto">
+                                <a href="/download/{{ project_name }}/zip" class="btn btn-outline-secondary download-btn">
+                                    <i class="fas fa-download me-2"></i>
+                                    Download All
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if ai_used and result.analysis %}
+        <!-- AI Analysis Results -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card result-card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-brain me-2"></i>
+                            AI Document Analysis
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="analysis-section">
+                            <!-- Document Type & Confidence -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h5 class="text-primary">Document Type</h5>
+                                    <p class="h4 mb-0">{{ result.analysis.document_type.replace('_', ' ').title() }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="text-primary">Confidence Score</h5>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-3" style="height: 10px;">
+                                            <div class="progress-bar bg-success" style="width: {{ (result.analysis.confidence * 100)|round }}%"></div>
+                                        </div>
+                                        <span class="fw-bold">{{ (result.analysis.confidence * 100)|round }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Document Details -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-muted">Title</h6>
+                                    <p class="mb-0">{{ result.analysis.title or 'Not detected' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-muted">Author</h6>
+                                    <p class="mb-0">{{ result.analysis.author or 'Not detected' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-muted">Department</h6>
+                                    <p class="mb-0">{{ result.analysis.department or 'Not detected' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-muted">Classification</h6>
+                                    <p class="mb-0">{{ result.analysis.classification or 'General' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Template Used -->
+                            <div class="mt-3">
+                                <h6 class="text-muted">Template Applied</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-success">{{ result.template_used.replace('_', ' ').title() }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata & Actions -->
+            <div class="col-lg-4">
+                <div class="card result-card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Document Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Format:</strong></td>
+                                    <td>LaTeX + PDF</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Processing:</strong></td>
+                                    <td>
+                                        {% if ai_used %}
+                                            <span class="badge bg-primary">AI Enhanced</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Standard</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Template:</strong></td>
+                                    <td>{{ result.template_used.replace('_', ' ').title() }}</td>
+                                </tr>
+                                {% if result.pdf_path %}
+                                <tr>
+                                    <td><strong>PDF:</strong></td>
+                                    <td><span class="badge bg-success">Generated</span></td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Download Actions -->
+                <div class="card result-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-download me-2"></i>
+                            Download Options
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/download/{{ project_name }}/latex" class="btn btn-outline-primary">
+                                <i class="fas fa-code me-2"></i>
+                                LaTeX Source (.tex)
+                            </a>
+                            {% if result.pdf_path %}
+                            <a href="/download/{{ project_name }}/pdf" class="btn btn-primary">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                PDF Document
+                                {% if result.pdf_size %}
+                                <small class="d-block">{{ "%.1f"|format(result.pdf_size / 1024) }} KB</small>
+                                {% endif %}
+                            </a>
+                            {% else %}
+                            <button onclick="compilePDF('{{ project_name }}')" class="btn btn-warning" id="compilePdfBtn2">
+                                <i class="fas fa-hammer me-2"></i>
+                                <span>Compile PDF Now</span>
+                            </button>
+                            {% endif %}
+                            {% if ai_used %}
+                            <a href="/download/{{ project_name }}/analysis" class="btn btn-outline-info">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                AI Analysis Report
+                            </a>
+                            {% endif %}
+                            <a href="/download/{{ project_name }}/zip" class="btn btn-outline-secondary">
+                                <i class="fas fa-archive me-2"></i>
+                                Complete Package
+                            </a>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    ZIP includes all files, LaTeX source, and compilation instructions
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Standard Conversion Results -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card result-card">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Conversion Results
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-4">Your document has been successfully converted using standard processing.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted">Template Used</h6>
+                                <p class="mb-0">{{ result.template_used.replace('_', ' ').title() }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted">Output Format</h6>
+                                <p class="mb-0">LaTeX + PDF</p>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <a href="/download/{{ project_name }}/latex" class="btn btn-outline-primary me-md-2">
+                                <i class="fas fa-code me-2"></i>
+                                Download LaTeX
+                            </a>
+                            {% if result.pdf_path %}
+                            <a href="/download/{{ project_name }}/pdf" class="btn btn-primary me-md-2">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Download PDF
+                                {% if result.pdf_size %}
+                                <small class="d-block">{{ "%.1f"|format(result.pdf_size / 1024) }} KB</small>
+                                {% endif %}
+                            </a>
+                            {% else %}
+                            <button onclick="compilePDF('{{ project_name }}')" class="btn btn-warning me-md-2" id="compilePdfBtn3">
+                                <i class="fas fa-hammer me-2"></i>
+                                <span>Compile PDF</span>
+                            </button>
+                            {% endif %}
+                            <a href="/download/{{ project_name }}/zip" class="btn btn-outline-secondary">
+                                <i class="fas fa-download me-2"></i>
+                                Download All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="/" class="btn btn-outline-primary btn-lg me-3">
+                    <i class="fas fa-plus me-2"></i>
+                    Convert Another Document
+                </a>
+                <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Print This Page
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>AI-Enhanced Doc2LaTeX</h5>
+                    <p class="text-muted">Intelligent document conversion for the modern world.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">Powered by OpenAI GPT-4 &amp; LaTeX</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // On-demand PDF compilation
+        function compilePDF(projectName) {
+            const btn = document.getElementById('compilePdfBtn');
+            const text = document.getElementById('compilePdfText');
+            const spinner = document.getElementById('compilePdfSpinner');
+            
+            // Update button state
+            btn.disabled = true;
+            text.textContent = 'Compiling...';
+            spinner.classList.remove('d-none');
+            
+            // Make AJAX request
+            fetch(`/compile_pdf/${projectName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showToast('PDF compiled successfully!', 'success');
+                        
+                        // Replace button with download link
+                        const btnContainer = btn.parentElement;
+                        btnContainer.innerHTML = `
+                            <a href="${data.download_url}" class="btn btn-primary download-btn me-2">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Download PDF
+                                <small class="d-block">${(data.pdf_size / 1024).toFixed(1)} KB</small>
+                            </a>
+                        `;
+                    } else {
+                        // Show error message
+                        showToast(`Compilation failed: ${data.error}`, 'error');
+                        
+                        // Reset button
+                        btn.disabled = false;
+                        text.textContent = 'Compile PDF';
+                        spinner.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    showToast(`Error: ${error.message}`, 'error');
+                    
+                    // Reset button
+                    btn.disabled = false;
+                    text.textContent = 'Compile PDF';
+                    spinner.classList.add('d-none');
+                });
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 position-fixed top-0 end-0 m-3`;
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            const toastInstance = new bootstrap.Toast(toast);
+            toastInstance.show();
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
