@@ -6,6 +6,46 @@ Creates beautiful, compliant documents following GoI formatting guidelines
 from typing import Dict, Any
 from enum import Enum
 import datetime
+import re
+
+def escape_latex(text: str) -> str:
+    """Escape special LaTeX characters to prevent compilation errors"""
+    if not isinstance(text, str):
+        return str(text)
+    
+    # Dictionary of LaTeX special characters and their escaped versions
+    latex_special_chars = {
+        '#': '\\#',
+        '$': '\\$',
+        '%': '\\%',
+        '&': '\\&',
+        '_': '\\_',
+        '{': '\\{',
+        '}': '\\}',
+        '^': '\\textasciicircum{}',
+        '~': '\\textasciitilde{}',
+        '\\': '\\textbackslash{}',
+    }
+    
+    # Escape special characters
+    for char, escaped in latex_special_chars.items():
+        text = text.replace(char, escaped)
+    
+    # Handle Unicode characters that might cause issues
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    
+    return text
+
+def clean_content_for_latex(content: str) -> str:
+    """Clean and prepare content for LaTeX compilation"""
+    # Escape special characters
+    content = escape_latex(content)
+    
+    # Fix common formatting issues
+    content = re.sub(r'\n\s*\n', r'\n\n', content)  # Normalize paragraph breaks
+    content = re.sub(r'^\s+', '', content, flags=re.MULTILINE)  # Remove leading whitespace
+    
+    return content
 
 class TemplateType(Enum):
     INDIAN_GOVERNMENT = "indian_government"
@@ -21,11 +61,14 @@ class IndianLaTeXTemplates:
     def get_government_template(metadata: Dict[str, Any], content: str) -> str:
         """Generate beautiful Indian Government document template"""
         
-        title = metadata.get('title', 'Government Document')
-        author = metadata.get('author', 'Government of India')
-        department = metadata.get('department', 'Department Name')
-        classification = metadata.get('classification', 'Public')
-        file_number = metadata.get('file_number', 'No. 1/1/2025-Desk')
+        title = escape_latex(metadata.get('title', 'Government Document'))
+        author = escape_latex(metadata.get('author', 'Government of India'))
+        department = escape_latex(metadata.get('department', 'Department Name'))
+        classification = escape_latex(metadata.get('classification', 'Public'))
+        file_number = escape_latex(metadata.get('file_number', 'No. 1/1/2025-Desk'))
+        
+        # Clean content for LaTeX
+        cleaned_content = clean_content_for_latex(content)
         
         template = f"""\\documentclass[11pt,a4paper]{{article}}
 
@@ -132,7 +175,7 @@ class IndianLaTeXTemplates:
 \\end{{center}}
 
 % Main content
-{content}
+{cleaned_content}
 
 \\vspace{{2cm}}
 
@@ -152,7 +195,7 @@ class IndianLaTeXTemplates:
 \\begin{{center}}
     \\rule{{\\textwidth}}{{0.5pt}} \\\\[0.2cm]
     \\small This document is generated electronically and is valid without signature \\\\
-    \\textit{{सत्यमेव जयते}} \\quad \\textit{{Truth Alone Triumphs}}
+    \\textit{{Satyameva Jayate}} \\quad \\textit{{Truth Alone Triumphs}}
 \\end{{center}}
 
 \\end{{document}}"""

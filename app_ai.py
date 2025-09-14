@@ -107,6 +107,8 @@ def read_input_file(input_path: str) -> str:
 
 def fallback_conversion(content: str, title: str = "Document", author: str = "Author") -> str:
     """Fallback LaTeX conversion when AI is not available"""
+    from src.template_engine import escape_latex, clean_content_for_latex
+    
     lines = content.split('\n')
     latex_content = []
     
@@ -118,20 +120,20 @@ def fallback_conversion(content: str, title: str = "Document", author: str = "Au
         
         # Simple heuristics
         if line.isupper() and len(line) > 10:
-            latex_content.append(f'\\section{{{line.title()}}}')
+            latex_content.append(f'\\section{{{escape_latex(line.title())}}}')
         elif line.startswith('Subject:'):
-            latex_content.append(f'\\subsection{{{line}}}')
+            latex_content.append(f'\\subsection{{{escape_latex(line)}}}')
         elif line.startswith('No.') or line.startswith('Dated:'):
-            latex_content.append(f'\\textbf{{{line}}}')
+            latex_content.append(f'\\textbf{{{escape_latex(line)}}}')
             latex_content.append('')
         else:
-            escaped_line = line.replace('&', '\\&').replace('%', '\\%').replace('$', '\\$')
+            escaped_line = escape_latex(line)
             latex_content.append(escaped_line)
         latex_content.append('')
     
     return get_template_by_type('basic', {
-        'title': title,
-        'author': author,
+        'title': escape_latex(title),
+        'author': escape_latex(author),
         'date': datetime.datetime.now().strftime('%B %d, %Y')
     }, '\n'.join(latex_content))
 
@@ -161,7 +163,8 @@ def upload_file():
             custom_title = request.form.get('title', '').strip()
             custom_author = request.form.get('author', '').strip()
             template_choice = request.form.get('template', 'auto')
-            build_pdf = request.form.get('build_pdf', 'false') == 'true'
+            # Always build PDF automatically
+            build_pdf = True
             
             # Save uploaded file
             filename = secure_filename(file.filename)
@@ -186,20 +189,25 @@ def upload_file():
             else:
                 result = process_without_ai(document_text, output_dir, custom_title, custom_author)
             
-            # Build PDF if requested
+            # Always attempt PDF compilation
             pdf_result = None
-            if build_pdf and result['success']:
-                print("🔨 Building PDF...")
+            if result['success']:
+                print("🔨 Building PDF automatically...")
                 pdf_result = build_pdf_document(result['latex_path'])
                 if pdf_result['success']:
                     result['pdf_path'] = pdf_result['pdf_path']
                     result['pdf_size'] = pdf_result['pdf_size']
                     result['compilation_output'] = pdf_result['compilation_output']
-                    flash('PDF compiled successfully!', 'success')
+                    result['pdf_available'] = True
+                    flash('Document converted and PDF compiled successfully!', 'success')
                 else:
-                    flash(f'PDF compilation failed: {pdf_result["error"]}', 'warning')
+                    # PDF failed but LaTeX succeeded
                     result['pdf_error'] = pdf_result['error']
                     result['compilation_output'] = pdf_result['compilation_output']
+                    result['pdf_available'] = False
+                    flash('Document converted to LaTeX successfully, but PDF compilation failed. LaTeX source is available for download.', 'warning')
+            else:
+                result['pdf_available'] = False
             
             # Store result in session or return immediately
             if result['success']:
@@ -338,15 +346,17 @@ def build_pdf_document(latex_path: str) -> dict:
             # Run pdflatex with just the filename (not full path)
             latex_filename = latex_path.name
             
-            for i in range(2):
-                result = subprocess.run([
-                    'pdflatex', '-interaction=nonstopmode', latex_filename
-                ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
-                
-                if result.returncode != 0:
-                    print(f"pdflatex run {i+1} failed:")
-                    print(result.stdout)
-                    print(result.stderr)
+            # First pass
+            print(f"🔨 Running pdflatex first pass...")
+            result1 = subprocess.run([
+                'pdflatex', '-interaction=nonstopmode', '-halt-on-error', latex_filename
+            ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+            
+            # Second pass for references
+            print(f"🔨 Running pdflatex second pass...")
+            result2 = subprocess.run([
+                'pdflatex', '-interaction=nonstopmode', '-halt-on-error', latex_filename
+            ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
             
             # Check if PDF was created
             pdf_filename = latex_filename.replace('.tex', '.pdf')
@@ -355,17 +365,25 @@ def build_pdf_document(latex_path: str) -> dict:
             if pdf_path.exists():
                 # Get PDF file size
                 pdf_size = pdf_path.stat().st_size
+                print(f"✅ PDF created successfully: {pdf_size} bytes")
                 return {
                     'success': True,
                     'pdf_path': str(pdf_path),
                     'pdf_size': pdf_size,
-                    'compilation_output': result.stdout if result.returncode == 0 else result.stderr
+                    'compilation_output': f"Pass 1: {result1.returncode}, Pass 2: {result2.returncode}"
                 }
             else:
+                # Provide detailed error information
+                error_info = f"Pass 1 exit code: {result1.returncode}\n"
+                if result1.stderr:
+                    error_info += f"Pass 1 stderr: {result1.stderr[:500]}...\n"
+                if result1.stdout:
+                    error_info += f"Pass 1 stdout: {result1.stdout[-1000:]}\n"
+                
                 return {
                     'success': False,
-                    'error': 'PDF file was not created',
-                    'compilation_output': result.stderr
+                    'error': 'PDF file was not created - likely LaTeX compilation errors',
+                    'compilation_output': error_info
                 }
                 
         finally:
@@ -375,8 +393,14 @@ def build_pdf_document(latex_path: str) -> dict:
     except subprocess.TimeoutExpired:
         return {
             'success': False,
-            'error': 'PDF compilation timed out (30 seconds)',
+            'error': 'PDF compilation timed out (60 seconds)',
             'compilation_output': 'Compilation process exceeded time limit'
+        }
+    except FileNotFoundError:
+        return {
+            'success': False,
+            'error': 'pdflatex not found. Please install LaTeX (MiKTeX/TeX Live)',
+            'compilation_output': 'LaTeX distribution not installed or not in PATH'
         }
     except Exception as e:
         return {

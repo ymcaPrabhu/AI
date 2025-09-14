@@ -98,13 +98,7 @@
                         
                         <!-- Quick Download Buttons -->
                         <div class="row justify-content-center mt-4">
-                            <div class="col-auto">
-                                <a href="/download/{{ project_name }}/latex" class="btn btn-outline-primary download-btn me-2">
-                                    <i class="fas fa-code me-2"></i>
-                                    Download LaTeX
-                                </a>
-                            </div>
-                            {% if result.pdf_path %}
+                            {% if result.pdf_available %}
                             <div class="col-auto">
                                 <a href="/download/{{ project_name }}/pdf" class="btn btn-primary download-btn me-2">
                                     <i class="fas fa-file-pdf me-2"></i>
@@ -114,19 +108,24 @@
                                     {% endif %}
                                 </a>
                             </div>
-                            {% else %}
+                            {% elif result.pdf_error %}
                             <div class="col-auto">
-                                <button onclick="compilePDF('{{ project_name }}')" class="btn btn-warning download-btn me-2" id="compilePdfBtn">
-                                    <i class="fas fa-hammer me-2"></i>
-                                    <span id="compilePdfText">Compile PDF</span>
-                                    <span id="compilePdfSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
-                                </button>
+                                <div class="alert alert-warning mb-0" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    PDF compilation failed. LaTeX source is available.
+                                </div>
                             </div>
                             {% endif %}
                             <div class="col-auto">
+                                <a href="/download/{{ project_name }}/latex" class="btn btn-outline-primary download-btn me-2">
+                                    <i class="fas fa-code me-2"></i>
+                                    Download LaTeX Source
+                                </a>
+                            </div>
+                            <div class="col-auto">
                                 <a href="/download/{{ project_name }}/zip" class="btn btn-outline-secondary download-btn">
                                     <i class="fas fa-download me-2"></i>
-                                    Download All
+                                    Download All Files
                                 </a>
                             </div>
                         </div>

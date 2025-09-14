@@ -53,7 +53,7 @@ export OPENAI_API_KEY=your_api_key_here
 
 4. **Run the application**
 ```bash
-# AI-Enhanced Web Application
+# AI-Enhanced Web Application (PDF auto-generated)
 python app_ai.py
 
 # Command Line Interface
@@ -69,7 +69,7 @@ python ai_convert.py --input document.txt --output ./output --build
    - Enable/disable AI analysis
    - Select custom title and author
    - Choose template (auto-select recommended)
-4. Download your beautiful LaTeX and PDF files
+4. PDF is automatically generated and available for download alongside LaTeX source
 
 ### Command Line
 ```bash

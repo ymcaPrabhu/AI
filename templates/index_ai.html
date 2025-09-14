@@ -280,32 +280,17 @@
                                 <input type="hidden" name="use_ai" value="false">
                                 {% endif %}
 
-                                <!-- Additional Options -->
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-cog me-2"></i>
-                                            Output Options
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="build_pdf" name="build_pdf" value="true" checked>
-                                            <label class="form-check-label" for="build_pdf">
-                                                <strong>Build PDF automatically</strong>
-                                                <small class="d-block text-muted">Compile LaTeX to PDF using pdflatex</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- Submit Button -->
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                                         <i class="fas fa-magic me-2"></i>
-                                        <span id="submitText">Convert with AI</span>
+                                        <span id="submitText">Convert Document</span>
                                         <span id="loadingSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
                                     </button>
+                                    <small class="text-muted mt-2 text-center">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        PDF will be automatically generated
+                                    </small>
                                 </div>
                             </form>
                         </div>
