@@ -1,0 +1,13 @@
+GOVERNMENT OF INDIA
+MINISTRY OF SAMPLE TESTING
+
+Subject: Test document for PDF compilation debugging
+
+No. 12345/2025/Testing
+Dated: September 14, 2025
+
+This is a test document to verify PDF compilation functionality.
+
+The document contains simple text that should be easily converted to LaTeX and compiled to PDF.
+
+Testing PDF generation with debugging enabled.

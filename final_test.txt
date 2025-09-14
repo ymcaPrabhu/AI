@@ -1,0 +1,22 @@
+GOVERNMENT OF INDIA
+MINISTRY OF FINANCE
+Department of Economic Affairs
+
+Subject: Test PDF Generation & Compilation
+
+File No. 12345/2025/Testing
+Dated: September 14, 2025
+
+Sir/Madam,
+
+This is a test document to verify that PDF compilation works correctly.
+
+The document contains:
+- Special characters like & and %
+- Government formatting
+- Multiple sections
+
+This should compile to PDF successfully without errors.
+
+Yours faithfully,
+Testing Department

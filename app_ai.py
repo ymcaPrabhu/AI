@@ -112,15 +112,15 @@ def fallback_conversion(content: str, title: str = "Document", author: str = "Au
     
     lines = content.split('\n')
     latex_content = []
-    
     for line in lines:
         line = line.strip()
         if not line:
             latex_content.append('')
             continue
-        
-        # Simple heuristics
-        if line.isupper() and len(line) > 10:
+        # If line starts with a LaTeX command, do not escape
+        if line.startswith('\\'):
+            latex_content.append(line)
+        elif line.isupper() and len(line) > 10:
             latex_content.append(f'\\section{{{escape_latex(line.title())}}}')
         elif line.startswith('Subject:'):
             latex_content.append(f'\\subsection{{{escape_latex(line)}}}')
@@ -131,7 +131,6 @@ def fallback_conversion(content: str, title: str = "Document", author: str = "Au
             escaped_line = escape_latex(line)
             latex_content.append(escaped_line)
         latex_content.append('')
-    
     return get_template_by_type('basic', {
         'title': escape_latex(title),
         'author': escape_latex(author),
