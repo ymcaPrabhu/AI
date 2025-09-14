@@ -153,9 +153,8 @@ class IndianLaTeXTemplates:
 
 \\begin{{document}}
 
-% Government letterhead
+% Government letterhead (text-based, no external graphics)
 \\begin{{center}}
-    \\includegraphics[height=1.5cm]{{emblem.png}} \\\\[0.3cm]
     {{\\Large \\textbf{{\\color{{saffron}}Government of India}}}} \\\\[0.2cm]
     {{\\large \\textbf{{{department}}}}} \\\\[0.3cm]
     \\rule{{0.8\\textwidth}}{{1pt}}
@@ -274,7 +273,36 @@ class IndianLaTeXTemplates:
         return template
 
     @staticmethod
-    def get_legal_template(metadata: Dict[str, Any], content: str) -> str:
+    def get_minimal_template(metadata: Dict[str, Any], content: str) -> str:
+        """Generate minimal LaTeX template that always compiles"""
+        
+        title = escape_latex(metadata.get('title', 'Document'))
+        author = escape_latex(metadata.get('author', 'Author'))
+        
+        # Clean content for LaTeX
+        cleaned_content = clean_content_for_latex(content)
+        
+        template = f"""\\documentclass[11pt,a4paper]{{article}}
+
+% Minimal template using only basic LaTeX packages
+\\usepackage[utf8]{{inputenc}}
+\\usepackage[T1]{{fontenc}}
+
+% Basic document setup
+\\title{{{title}}}
+\\author{{{author}}}
+\\date{{\\today}}
+
+\\begin{{document}}
+
+\\maketitle
+
+% Main content
+{cleaned_content}
+
+\\end{{document}}"""
+        
+        return template
         """Generate legal document template following Indian legal standards"""
         
         template = f"""\\documentclass[12pt,a4paper]{{article}}

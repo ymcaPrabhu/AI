@@ -15,6 +15,7 @@ import sys
 import subprocess
 import datetime
 import json
+import re
 
 # Load environment variables from .env file
 def load_env_file():
@@ -201,11 +202,18 @@ def upload_file():
                     result['pdf_available'] = True
                     flash('Document converted and PDF compiled successfully!', 'success')
                 else:
-                    # PDF failed but LaTeX succeeded
-                    result['pdf_error'] = pdf_result['error']
-                    result['compilation_output'] = pdf_result['compilation_output']
-                    result['pdf_available'] = False
-                    flash('Document converted to LaTeX successfully, but PDF compilation failed. LaTeX source is available for download.', 'warning')
+                    # Try with minimal template as fallback
+                    print("⚠️ PDF compilation failed, trying minimal template...")
+                    minimal_result = try_minimal_template_fallback(document_text, output_dir, custom_title, custom_author)
+                    if minimal_result['success']:
+                        result.update(minimal_result)
+                        flash('Document converted successfully using simplified template!', 'success')
+                    else:
+                        # PDF failed but LaTeX succeeded
+                        result['pdf_error'] = pdf_result['error']
+                        result['compilation_output'] = pdf_result['compilation_output']
+                        result['pdf_available'] = False
+                        flash('Document converted to LaTeX successfully, but PDF compilation failed. LaTeX source is available for download.', 'warning')
             else:
                 result['pdf_available'] = False
             
@@ -227,6 +235,65 @@ def upload_file():
     else:
         flash('Invalid file type. Please upload TXT, DOC, DOCX, or PDF files.', 'error')
         return redirect(url_for('index'))
+
+def try_minimal_template_fallback(document_text: str, output_dir: str, custom_title: str = None, custom_author: str = None) -> dict:
+    """Try generating PDF with minimal template as fallback"""
+    try:
+        from src.template_engine import escape_latex, clean_content_for_latex
+        
+        title = escape_latex(custom_title or "Document")
+        author = escape_latex(custom_author or "Author")
+        cleaned_content = clean_content_for_latex(document_text)
+        
+        # Create minimal LaTeX template
+        minimal_latex = f"""\\documentclass[11pt,a4paper]{{article}}
+
+% Minimal template using only basic LaTeX packages
+\\usepackage[utf8]{{inputenc}}
+\\usepackage[T1]{{fontenc}}
+
+% Basic document setup
+\\title{{{title}}}
+\\author{{{author}}}
+\\date{{\\today}}
+
+\\begin{{document}}
+
+\\maketitle
+
+% Main content
+{cleaned_content}
+
+\\end{{document}}"""
+        
+        # Save minimal LaTeX file
+        latex_path = os.path.join(output_dir, 'main_minimal.tex')
+        with open(latex_path, 'w', encoding='utf-8') as f:
+            f.write(minimal_latex)
+        
+        # Try to compile minimal template
+        pdf_result = build_pdf_document(latex_path)
+        
+        if pdf_result['success']:
+            # Copy the minimal template over the original
+            original_latex_path = os.path.join(output_dir, 'main.tex')
+            with open(original_latex_path, 'w', encoding='utf-8') as f:
+                f.write(minimal_latex)
+            
+            return {
+                'success': True,
+                'latex_path': original_latex_path,
+                'pdf_path': pdf_result['pdf_path'],
+                'pdf_size': pdf_result['pdf_size'],
+                'compilation_output': 'Compiled with minimal template',
+                'template_used': 'minimal_fallback',
+                'pdf_available': True
+            }
+        else:
+            return {'success': False, 'error': 'Even minimal template failed'}
+            
+    except Exception as e:
+        return {'success': False, 'error': f'Fallback failed: {str(e)}'}
 
 def process_with_ai(document_text: str, output_dir: str, custom_title: str = None, 
                    custom_author: str = None, template_choice: str = 'auto') -> dict:
@@ -346,17 +413,21 @@ def build_pdf_document(latex_path: str) -> dict:
             # Run pdflatex with just the filename (not full path)
             latex_filename = latex_path.name
             
-            # First pass
+            # First pass - run with error handling
             print(f"🔨 Running pdflatex first pass...")
             result1 = subprocess.run([
-                'pdflatex', '-interaction=nonstopmode', '-halt-on-error', latex_filename
+                'pdflatex', '-interaction=nonstopmode', '-file-line-error', latex_filename
             ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
             
-            # Second pass for references
-            print(f"🔨 Running pdflatex second pass...")
-            result2 = subprocess.run([
-                'pdflatex', '-interaction=nonstopmode', '-halt-on-error', latex_filename
-            ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+            # Check if first pass succeeded
+            if result1.returncode == 0:
+                # Second pass for references (only if first pass succeeded)
+                print(f"🔨 Running pdflatex second pass...")
+                result2 = subprocess.run([
+                    'pdflatex', '-interaction=nonstopmode', '-file-line-error', latex_filename
+                ], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+            else:
+                result2 = result1  # Use first pass result for error reporting
             
             # Check if PDF was created
             pdf_filename = latex_filename.replace('.tex', '.pdf')
@@ -370,20 +441,16 @@ def build_pdf_document(latex_path: str) -> dict:
                     'success': True,
                     'pdf_path': str(pdf_path),
                     'pdf_size': pdf_size,
-                    'compilation_output': f"Pass 1: {result1.returncode}, Pass 2: {result2.returncode}"
+                    'compilation_output': f"PDF compilation successful"
                 }
             else:
-                # Provide detailed error information
-                error_info = f"Pass 1 exit code: {result1.returncode}\n"
-                if result1.stderr:
-                    error_info += f"Pass 1 stderr: {result1.stderr[:500]}...\n"
-                if result1.stdout:
-                    error_info += f"Pass 1 stdout: {result1.stdout[-1000:]}\n"
+                # Analyze error messages and provide helpful feedback
+                error_analysis = analyze_latex_errors(result1.stdout, result2.stdout)
                 
                 return {
                     'success': False,
-                    'error': 'PDF file was not created - likely LaTeX compilation errors',
-                    'compilation_output': error_info
+                    'error': error_analysis['error'],
+                    'compilation_output': error_analysis['details']
                 }
                 
         finally:
@@ -408,6 +475,53 @@ def build_pdf_document(latex_path: str) -> dict:
             'error': str(e),
             'compilation_output': f'Error during compilation: {str(e)}'
         }
+
+def analyze_latex_errors(output1: str, output2: str) -> dict:
+    """Analyze LaTeX compilation output and provide helpful error messages"""
+    combined_output = f"{output1}\n{output2}"
+    
+    # Common error patterns and solutions
+    error_patterns = [
+        {
+            'pattern': r'File.*not found',
+            'error': 'Missing file or package',
+            'solution': 'Check if all required files and packages are available'
+        },
+        {
+            'pattern': r'Undefined control sequence',
+            'error': 'Unknown LaTeX command',
+            'solution': 'Check for typos in LaTeX commands or missing packages'
+        },
+        {
+            'pattern': r'Unicode character.*not set up',
+            'error': 'Unicode character not supported',
+            'solution': 'Document contains special characters not supported by pdfLaTeX'
+        },
+        {
+            'pattern': r'Package.*Error',
+            'error': 'Package error',
+            'solution': 'LaTeX package encountered an error'
+        },
+        {
+            'pattern': r'Emergency stop',
+            'error': 'Fatal LaTeX error',
+            'solution': 'Compilation stopped due to severe error'
+        }
+    ]
+    
+    # Find matching error pattern
+    for pattern_info in error_patterns:
+        if re.search(pattern_info['pattern'], combined_output, re.IGNORECASE):
+            return {
+                'error': pattern_info['error'],
+                'details': f"{pattern_info['solution']}\n\nLast 500 characters of output:\n{combined_output[-500:]}"
+            }
+    
+    # Default error message
+    return {
+        'error': 'LaTeX compilation failed',
+        'details': f"Compilation failed with exit code. Last 500 characters:\n{combined_output[-500:]}"
+    }
 
 @app.route('/download/<project_name>/<file_type>')
 def download_file(project_name, file_type):

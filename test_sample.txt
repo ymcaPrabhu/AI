@@ -1,0 +1,15 @@
+OFFICE MEMORANDUM
+
+Subject: Testing PDF Generation System
+
+This is a test document to verify that the PDF generation system works correctly.
+
+The document contains:
+- Simple text formatting
+- No special characters that might cause issues
+- Basic structure for government documents
+
+This should compile successfully to PDF.
+
+Department of Testing
+Government of India
