@@ -22,6 +22,14 @@ A sophisticated document conversion system that transforms various document form
 - Academic Papers
 - Legal Documents
 
+## 📚 **DOCUMENTATION**
+
+- **[📁 PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Complete project structure and architecture guide
+- **[📊 PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Quick project summary and use cases  
+- **[🤖 README_AI.md](README_AI.md)** - AI features and capabilities documentation
+- **[🚀 DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and infrastructure guide
+- **[✅ PROJECT_COMPLETION_SUMMARY.md](PROJECT_COMPLETION_SUMMARY.md)** - Implementation status and features
+
 ## 🛠️ Quick Start
 
 ### Prerequisites
