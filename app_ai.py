@@ -433,6 +433,11 @@ def build_pdf_document(latex_path: str) -> dict:
             pdf_filename = latex_filename.replace('.tex', '.pdf')
             pdf_path = output_dir / pdf_filename
             
+            print(f"🔍 Debug: Looking for PDF at: {pdf_path}")
+            print(f"🔍 Debug: PDF exists: {pdf_path.exists()}")
+            print(f"🔍 Debug: Return code 1: {result1.returncode}")
+            print(f"🔍 Debug: Return code 2: {result2.returncode}")
+            
             if pdf_path.exists():
                 # Get PDF file size
                 pdf_size = pdf_path.stat().st_size
@@ -447,6 +452,7 @@ def build_pdf_document(latex_path: str) -> dict:
                 # Analyze error messages and provide helpful feedback
                 error_analysis = analyze_latex_errors(result1.stdout, result2.stdout)
                 
+                print(f"❌ Debug: PDF not found, analyzing errors...")
                 return {
                     'success': False,
                     'error': error_analysis['error'],

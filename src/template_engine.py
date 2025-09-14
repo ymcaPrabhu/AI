@@ -38,12 +38,35 @@ def escape_latex(text: str) -> str:
 
 def clean_content_for_latex(content: str) -> str:
     """Clean and prepare content for LaTeX compilation"""
-    # Escape special characters
-    content = escape_latex(content)
+    # Check if content already contains LaTeX commands
+    # If it does, selectively escape only problematic characters, not LaTeX commands
+    has_latex_commands = bool(re.search(r'\\[a-zA-Z]+\{', content))
     
-    # Fix common formatting issues
-    content = re.sub(r'\n\s*\n', r'\n\n', content)  # Normalize paragraph breaks
-    content = re.sub(r'^\s+', '', content, flags=re.MULTILINE)  # Remove leading whitespace
+    if has_latex_commands:
+        # Content already has LaTeX markup, selectively escape only text characters
+        # that can cause compilation issues, but preserve LaTeX commands
+        selective_chars = {
+            '&': '\\&',
+            '#': '\\#', 
+            '$': '\\$',
+            '%': '\\%',
+            '_': '\\_',
+            '^': '\\textasciicircum{}',
+            '~': '\\textasciitilde{}'
+        }
+        
+        for char, escaped in selective_chars.items():
+            content = content.replace(char, escaped)
+            
+        # Normalize formatting
+        content = re.sub(r'\n\s*\n', r'\n\n', content)  # Normalize paragraph breaks
+        content = re.sub(r'^\s+', '', content, flags=re.MULTILINE)  # Remove leading whitespace
+    else:
+        # Raw text content, needs full escaping
+        content = escape_latex(content)
+        # Fix common formatting issues
+        content = re.sub(r'\n\s*\n', r'\n\n', content)  # Normalize paragraph breaks
+        content = re.sub(r'^\s+', '', content, flags=re.MULTILINE)  # Remove leading whitespace
     
     return content
 
