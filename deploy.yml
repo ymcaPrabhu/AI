@@ -1,0 +1,19 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches: [ "main" ]   # or "master" if your default branch is master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push to Hugging Face Space
+        uses: huggingface/actions/hub@main
+        with:
+          repo: spaces/ymcaPrabhu/My-First  # change to your Space
+          token: ${{ secrets.HF_TOKEN }}
+          # optional if app is in a subfolder:
+          # subfolder: path/to/app
