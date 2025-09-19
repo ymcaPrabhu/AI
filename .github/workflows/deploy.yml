@@ -2,18 +2,30 @@ name: Deploy to Hugging Face Spaces
 
 on:
   push:
-    branches: [ "main" ]   # or "master" if your default branch is master
+    branches: [ "main" ]     # change if your default branch is different
+  workflow_dispatch:         # allow manual run from Actions tab
+
+concurrency:
+  group: deploy-to-hf
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true           # pulls Git LFS files if you use them
 
-      - name: Push to Hugging Face Space
+      - name: Sync to Hugging Face Space
         uses: huggingface/actions/hub@main
         with:
-          repo: spaces/ymcaPrabhu/My-First  # change to your Space
+          repo: spaces/ymcaPrabhu/My-First
           token: ${{ secrets.HF_TOKEN }}
-          # optional if app is in a subfolder:
+          # If your app is in a subfolder, uncomment and set:
           # subfolder: path/to/app
+
+      # Optional: show Space URL in logs
+      - name: Print Space URL
+        run: echo "Deployed to https://huggingface.co/spaces/ymcaPrabhu/My-First"
